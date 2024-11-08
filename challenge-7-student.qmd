@@ -69,9 +69,16 @@ remove_unlikely <- function(x,
 ```{r}
 #| label: modify-impossible-values-of-length-weight
 
-fish |> 
-  mutate(length = remove_unlikely(x = length, mini = 5, maxi = 80),
-         weight = remove_unlikely(x = weight, mini = 10, maxi = 4000))
+fish <- fish |> 
+  mutate(length = remove_unlikely(
+           x = length, 
+           mini = 5, 
+           maxi = 80),
+         weight = remove_unlikely(
+           x = weight, 
+           mini = 10, 
+           maxi = 4000)
+         )
 ```
 
 **3. Write a function to calculate the condition index of a fish, given inputs of weight and length.**
@@ -84,6 +91,8 @@ dataset and variable names as inputs)!
 
 ```{r}
 #| label: condition-function
+condition_fish <- function(len, wei){
+  (wei * 100)/(len^3)}
 
 ```
 
@@ -97,5 +106,13 @@ dataset and variable names as inputs)!
 
 ```{r}
 #| label: condition-indices-over-time
+fish |>
+  mutate(condition = condition_fish(length, weight))|>
+  ggplot(mapping = aes(x = year, y = condition, color = species)) +
+  geom_jitter()+
+  labs(title = "Change in Condition Index of ",
+       x = "Time (Years)",
+       y = "",
+       subtitle = "Y-Axis Representing Fish Condition ((weight*100)/(length^3))")
 
 ```
