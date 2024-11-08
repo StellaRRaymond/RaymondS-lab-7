@@ -1,16 +1,25 @@
 ---
 title: "Challenge 7: Incorporating Multiple Inputs"
 subtitle: "Functions + Fish"
-author: "Your name here!"
-format: html
+author: "Stella Raymond"
+format: 
+  html:  
+    embed-resources: true
+    code-tools: true
+    toc: true
 editor: source
-embed-resources: true
+execute: 
+  echo: true
+code-fold: true
 ---
 
 ```{r}
 #| label: setup
+#| message: false
+library(tidyverse)
+library(here)
 
-
+fish <- read_csv(here::here("data","BlackfootFish.csv"))
 ```
 
 ## Condition Index
@@ -25,7 +34,8 @@ $$\text{condition index} = \frac{weight}{length^3} \times 100$$
 
 ```{r}
 #| label: transform-data-to-have-correct-units
-
+fish <- fish |>
+  mutate(length = length/10)
 ```
 
 **2. Collecting data of this sort can be very messy! Write a function that will replace unlikely `length` and `weight` measurements with `NA`. Your function should accept at least three inputs:**
@@ -42,14 +52,26 @@ If you are struggling with the structure of your function, I would suggest readi
 
 ```{r}
 #| label: function-to-change-impossible-measurements-to-NA
-
+remove_unlikely <- function(x, 
+                            mini, 
+                            maxi)
+  {
+  case_when(
+    x < mini ~ mini,
+    x > maxi ~ maxi,
+    .default = x)
+    }
 ```
+
 
 **3. After consulting the [Montana Record Table](https://fwp.mt.gov/fish/anglingData/records) for the four species of trout included in these data, I have conjectured that it is unlikely to have measurements for fish below 5 cm and above 80 cm in length or below 10 g and above 4,000 g in weight. Use your function to modify the `length` and `weight` columns of the `fish` dataset based on my cutoffs.**
 
 ```{r}
 #| label: modify-impossible-values-of-length-weight
 
+fish |> 
+  mutate(length = remove_unlikely(x = length, mini = 5, maxi = 80),
+         weight = remove_unlikely(x = weight, mini = 10, maxi = 4000))
 ```
 
 **3. Write a function to calculate the condition index of a fish, given inputs of weight and length.**
