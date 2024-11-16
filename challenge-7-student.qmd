@@ -92,8 +92,7 @@ dataset and variable names as inputs)!
 ```{r}
 #| label: condition-function
 condition_fish <- function(len, wei){
-  (wei * 100)/(len^3)}
-
+  (wei*100)/(len^3)}
 ```
 
 **4. Make a thoughtful visualization of how fish conditions have varied over the duration of this study.**
@@ -107,12 +106,13 @@ condition_fish <- function(len, wei){
 ```{r}
 #| label: condition-indices-over-time
 fish |>
-  mutate(condition = condition_fish(length, weight))|>
-  ggplot(mapping = aes(x = year, y = condition, color = species)) +
-  geom_jitter()+
-  labs(title = "Change in Condition Index of ",
+  filter(!is.na(length) & !is.na(weight))|>
+  mutate(condition = condition_fish(length, weight),
+         mean_con = mean(condition))|>
+  ggplot(mapping = aes(x = year, y = mean_con, color = species)) +
+  geom_jitter(alpha = .5)+
+  labs(title = "Change in Condition Index of Blackfoot River Fish",
        x = "Time (Years)",
        y = "",
-       subtitle = "Y-Axis Representing Fish Condition ((weight*100)/(length^3))")
-
+       subtitle = "Y-Axis Representing Fish Condition")
 ```
