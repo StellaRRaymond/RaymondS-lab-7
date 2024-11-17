@@ -51,12 +51,20 @@ measurement errors.
 # You should use `across()`!
 :::
 
+**The where() origintated from R telling me: Error in `select()`: ! Formula shorthand must be wrapped in `where()`.**
+
 ```{r}
 #| label: find-missing-values
 fish |>
   summarize(across(.cols = trip:species,
-                   .fns = ~sum(is.na(.x))))
+                   .fns = ~sum(is.na(.x)
+                               )
+                   )
+            )
 ```
+
+*Reflection: |> select(where(~.x>0))*
+
 
 **2. Create ONE thoughtful visualization that explores the frequency of missing values across the different years, sections, and trips.**
 
@@ -65,19 +73,24 @@ fish |>
 
 fish|>
   select(year,
-         weight)|>
-  filter(is.na(weight)
-         )|>
-  group_by(year)|>
-  mutate(weight_na = sum(is.na(weight)
-                         )
-         )|>
+         weight,
+         section,
+         trip)|>
+  group_by(year, 
+           section, 
+           trip)|>
+  mutate(weight_na = sum(if_any(weight, 
+                                is.na)))|>
   ggplot(mapping = aes(x = year, 
-                       y = weight_na)
+                       y = weight_na,
+                       color = section)
          )+
-  geom_line()+
+  geom_point()+
+  scale_color_manual(values = c("green4", 
+                                "#fec464"))+
   theme_bw()+
-  labs(title = "Missing fish weights over time",
+  facet_wrap(~trip)+
+  labs(title = "Missing Blackfoot River Fish Weights Over Time",
        x = "Time (yrs)",
        y ="",
        subtitle = "y-axis representing number of missing values for weight")
@@ -113,7 +126,7 @@ This process of duplicating an action multiple times can make it difficult to
 understand the intent of the process. *Additionally, it can make it very difficult to spot mistakes.*
 
 **3. What is the mistake I made in the above rescaling code?**
-You used length within the rescaling for weight! As a result, the values will be compeltely messed up because you are no longer using the minimum value for weight but instead for length. Grams and cm do not translate as cooperable units.
+You used length within the rescaling for weight! As a result, the values will be compeltely messed up because you are no longer using the minimum value for weight but instead for length. Grams and cm do not translate as cooperable units so the resulting calculation is meaningless.
 
 When you find yourself copy-pasting lines of code, it's time to write a
 function, instead!
@@ -126,10 +139,21 @@ function, instead!
 ```{r}
 #| label: write-rescale-function
 
-rescale_01 <- function(x){return((x - min(x, na.rm = TRUE)) / 
-           (max(x, na.rm = TRUE) - min(x, na.rm = TRUE)))}
-  
+rescale_01 <- function(x, na.rm = TRUE){
+  if(!is.numeric(x) | length(x) <= 1)
+  {stop("change input")}
+  ranging <- range(x, 
+                   na.rm = na.rm)
+  return((x - ranging[1]) / 
+           (ranging[2] - ranging[1]))}
 ```
+
+
+*Reflection: used the help of chat*
+
+
+
+
 
 ::: callout-tip
 # Efficiency 
@@ -143,6 +167,9 @@ function.
 
 + **... the input vector is not numeric.**
 + **... the length of the input vector is not greater than 1.**
+
+
+*Reflection: Mistype*
 
 ::: callout-tip
 # Modify Previous Code
@@ -165,6 +192,18 @@ min(rescaled, na.rm = TRUE)
 max(rescaled, na.rm = TRUE)
 ```
 verified!
+#Testing Question 5
+
+```{r}
+#| label: verify-rescale-function-p2
+#| error: true
+non_numeric <- "word"
+small_vector <- 1
+
+rescale_01(non_numeric)
+rescale_01(small_vector)
+```
+it stops!
 
 Next, let's test the function on the `length` column of the `BlackfootFish` data.
 
@@ -183,15 +222,16 @@ fish |>
   ggplot(aes(x = length)) + 
   geom_histogram(binwidth = 45) +
   labs(x = "Original Values of Fish Length (mm)",
+       y = "",
        subtitle = "y-axis representing Count") +
   scale_y_continuous(limits = c(0,4000))
 
 # Code for Q7 plot.
 
 fish |>  
-  mutate(length = rescale_01(length))|>
-  ggplot(aes(x = length)) + 
-  geom_histogram(binwidth = .045) +
+  mutate(length_scaled = rescale_01(length))|>
+  ggplot(aes(x = length_scaled)) + 
+  geom_histogram(binwidth = .043) +
   labs(x = "Scaled Values of Fish Length (mm)",
        y = "",
        subtitle = "y-axis representing Count") +
@@ -226,9 +266,17 @@ If you are struggling with this task, I recommend looking back over the
 section of R for Data Science!
 :::
 
+the website https://dplyr.tidyverse.org/reference/across.html helped me with across(all_of()) in order to input multiple column names.
+
 ```{r}
 #| label: rescale-data-frame-function
-
+rescale_column <- function(df, name)
+{
+  #if(df = )
+  #{stop("change input")}
+  df |> 
+    mutate(across(all_of(name), ~ rescale_01(.x)))
+  }
 ```
 
 **9. Use your `rescale_column()` function to rescale *both* the `length` and `weight` columns.**
@@ -240,4 +288,6 @@ I expect that you carry out this process by calling the `rescale_column()` funct
 ```{r}
 #| label: rescale-two-columns
 
+fish |>
+  rescale_column(name = c("weight","length"))
 ```
