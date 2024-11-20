@@ -108,19 +108,23 @@ condition_fish <- function(wei, len){
 ```{r}
 #| label: condition-indices-over-time
 fish |>
-  filter(!is.na(length) & !is.na(weight))|>
+  filter(!is.na(length) & 
+         !is.na(weight))|>
   group_by(year, species)|>
-  mutate(condition = condition_fish(wei = weight, len = length),
+  mutate(condition = condition_fish(wei = weight, 
+                                    len = length),
          mean_con = mean(condition))|>
   ungroup()|>
-  ggplot(mapping = aes(x = year, y = mean_con, color = species)) +
-  geom_point(alpha = .5)+
-  labs(title = "Change in Condition Index of Blackfoot River Fish",
+  ggplot(mapping = aes(x = year,
+                      y = mean_con, 
+                      color = species)) +
+  geom_point(alpha = .5) +
+  geom_smooth() +
+  labs(title = "Change in the Condition Index of Blackfoot River Fish",
        x = "Time (Years)",
        y = "",
        subtitle = "Y-Axis Representing Fish Condition")
 ```
 
-*Reflection: In the end, there was one small yet influential mistake I made. It was not in fact the order of operations as stated but instead how i coded the function. Instead of removing the maximum and minimum values, i make it such that any outliers were made into the minimum and maximum. This, as a result, did not *
-
+*Reflection: In the end, there was one small yet impactful mistake I made. It was not in fact the order of operations as stated in my feedback but instead how i coded the function. Instead of removing the maximum and minimum values, i make it such that any outliers were made into the minimum and maximum. This, as a result, did not remove the outliers. The graph was very strange and did not range from 0 to 2, making my graph hard to read (and incorrect!). I've since changed this error and removed the outliers. From there, I could find the mean condition and graph it over time. It is important to make sure that the functions you create are not only doing what you intend them to do but completing your originally intended action. There is a difference between recieving no warning message while obtaining values versus obtaining the correct values. In other words, just based on the fact that it runs doesn't neccessarily mean it is giving me what I wanted. Going forward, I need to be vigilant about what I am instructing my code to do. *
 
