@@ -35,7 +35,7 @@ $$\text{condition index} = \frac{weight}{length^3} \times 100$$
 ```{r}
 #| label: transform-data-to-have-correct-units
 fish <- fish |>
-  mutate(length = length/10)
+  mutate(length = (length/10))
 ```
 
 **2. Collecting data of this sort can be very messy! Write a function that will replace unlikely `length` and `weight` measurements with `NA`. Your function should accept at least three inputs:**
@@ -57,8 +57,8 @@ remove_unlikely <- function(x,
                             maxi)
   {
   case_when(
-    x < mini ~ mini,
-    x > maxi ~ maxi,
+    x < mini ~ NA,
+    x > maxi ~ NA,
     .default = x)
     }
 ```
@@ -91,8 +91,10 @@ dataset and variable names as inputs)!
 
 ```{r}
 #| label: condition-function
-condition_fish <- function(len, wei){
-  (wei*100)/(len^3)}
+condition_fish <- function(wei, len){
+  if(!is.numeric(x))
+  {stop("change input")}
+  return(((wei)/(len^3))*100)}
 ```
 
 **4. Make a thoughtful visualization of how fish conditions have varied over the duration of this study.**
@@ -107,12 +109,18 @@ condition_fish <- function(len, wei){
 #| label: condition-indices-over-time
 fish |>
   filter(!is.na(length) & !is.na(weight))|>
-  mutate(condition = condition_fish(length, weight),
+  group_by(year, species)|>
+  mutate(condition = condition_fish(wei = weight, len = length),
          mean_con = mean(condition))|>
+  ungroup()|>
   ggplot(mapping = aes(x = year, y = mean_con, color = species)) +
-  geom_jitter(alpha = .5)+
+  geom_point(alpha = .5)+
   labs(title = "Change in Condition Index of Blackfoot River Fish",
        x = "Time (Years)",
        y = "",
        subtitle = "Y-Axis Representing Fish Condition")
 ```
+
+*Reflection: In the end, there was one small yet influential mistake I made. It was not in fact the order of operations as stated but instead how i coded the function. Instead of removing the maximum and minimum values, i make it such that any outliers were made into the minimum and maximum. This, as a result, did not *
+
+
